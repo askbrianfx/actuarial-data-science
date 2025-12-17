@@ -1,66 +1,195 @@
 # Bash Setup Guide (Git Bash on Windows)
 
-This document captures the bash environment setup for data science development on Windows using Git Bash (MSYS2).
+This document provides **complete setup from a fresh Windows machine** for data science development using Git Bash.
 
 ## Overview
 
 **Environment:** Git Bash on Windows (MINGW64)  
 **Shell:** `/bin/bash`  
-**Package Manager:** Scoop (user-space, no admin required)
+**Package Manager:** Scoop (user-space, no admin required)  
+**Goal:** Reproducible data science environment without admin privileges
 
 ---
 
 ## Prerequisites
 
-- Windows 10/11
-- Git for Windows (PortableGit or standard installer)
-- Python 3.14+ installed
+- Windows 10 or Windows 11
+- No admin access required (all user-local installs)
 
 ---
 
-## Installation Steps
+## Complete Setup from Zero
 
-### 1. Install Scoop (Package Manager)
+### Step 1: Install Git for Windows (includes Git Bash)
+
+Download and install Git for Windows which includes Git Bash terminal.
+
+**Option A: Standard Installer (Recommended)**
+
+1. Download Git for Windows: https://git-scm.com/download/win
+2. Run installer (64-bit version)
+3. **Important selections during install:**
+   - Use Git from Git Bash only (or from command line if you prefer)
+   - Checkout as-is, commit Unix-style line endings
+   - Use MinTTY (the default terminal)
+   - Enable file system caching
+4. Complete installation
+
+**Option B: Portable Git (No Admin)**
+
+If you cannot run installers, use PortableGit (see `configuration.md` for PowerShell commands to download/extract manually).
+
+**Verify Git Bash:**
+
+Open "Git Bash" from Start Menu, you should see:
+```bash
+user@COMPUTER MINGW64 ~
+$
+```
+
+Test Git:
+```bash
+git --version
+# Output: git version 2.52.0.windows.1 (or later)
+```
+
+---
+
+### Step 2: Install Python
+
+Download and install Python from https://www.python.org/downloads/
+
+**Installation:**
+
+1. Download Python 3.14+ (64-bit)
+2. Run installer
+3. **CRITICAL:** Check "Add Python to PATH" before clicking Install
+4. Click "Install Now"
+5. Wait for installation to complete
+
+**Verify in Git Bash:**
+
+```bash
+python --version
+# Output: Python 3.14.2 (or later)
+
+# Also test pip
+pip --version
+```
+
+**If Python not found in bash:**
+
+Close and reopen Git Bash to pick up new PATH, or manually add:
+```bash
+export PATH="/c/Users/$USER/AppData/Local/Programs/Python/Python314:$PATH"
+export PATH="/c/Users/$USER/AppData/Local/Programs/Python/Python314/Scripts:$PATH"
+```
+
+---
+
+### Step 3: Install Poetry (Python Package Manager)
+
+Install Poetry using the official installer:
+
+```bash
+# Download and run Poetry installer
+curl -sSL https://install.python-poetry.org | python -
+
+# Poetry installs to: ~/AppData/Roaming/Python/Scripts/poetry.exe
+```
+
+**Add Poetry to PATH:**
+
+```bash
+# Add to ~/.bashrc for permanent access
+echo 'export PATH="$HOME/AppData/Roaming/Python/Scripts:$PATH"' >> ~/.bashrc
+
+# Reload bashrc
+source ~/.bashrc
+
+# Verify
+poetry --version
+# Output: Poetry (version 2.2.1 or later)
+```
+
+---
+
+### Step 4: Install VS Code
+
+Download and install VS Code: https://code.visualstudio.com/
+
+**Installation:**
+
+1. Download VS Code (64-bit)
+2. Run installer
+3. **Recommended selections:**
+   - Add "Open with Code" to context menu
+   - Add to PATH
+   - Register Code as editor for supported file types
+4. Complete installation
+
+**Configure VS Code to use Git Bash:**
+
+After opening VS Code:
+
+1. Press `Ctrl + ,` (Settings)
+2. Search: `terminal.integrated.defaultProfile.windows`
+3. Set to: `Git Bash`
+
+Or edit settings JSON (`Ctrl + Shift + P` → "Preferences: Open Settings (JSON)"):
+
+```json
+{
+  "terminal.integrated.defaultProfile.windows": "Git Bash"
+}
+```
+
+**Verify:**
+
+1. Open VS Code
+2. Press `` Ctrl + ` `` (open terminal)
+3. Should see Git Bash with: `user@COMPUTER MINGW64 ~/path`
+
+---
+
+## Installation Steps (Tools & Packages)
+
+### Step 5: Install Scoop (Package Manager)
 
 Scoop enables easy installation of tools without admin privileges.
 
 ```bash
 # Download and install Scoop
-iwr -useb get.scoop.sh | iex
+powershell -NoProfile -Command "iwr -useb get.scoop.sh | iex"
 
 # Verify installation
 scoop --version
 ```
 
+**Note:** This runs a PowerShell command from bash. Scoop itself uses PowerShell for installation.
+
 **Scoop Location:** `~/scoop/` → `C:\Users\<username>\scoop\`
 
 ---
 
-### 2. Add Scoop & Poetry to PATH
+### Step 6: Add Scoop to Bash PATH
 
-Update your `.bashrc` to include Scoop and Poetry in PATH:
+Update your `.bashrc` to include Scoop in PATH (Poetry already added in Step 3):
 
 ```bash
-# Edit ~/.bashrc
-nano ~/.bashrc
+# Add Scoop to ~/.bashrc
+echo 'export PATH="$HOME/scoop/shims:$PATH"' >> ~/.bashrc
 
-# Add these lines at the end:
-export PATH="$HOME/scoop/shims:$PATH"
-export PATH="$HOME/AppData/Roaming/Python/Scripts:$PATH"
-
-# Save and reload
+# Reload bashrc
 source ~/.bashrc
-```
 
-**Verify:**
-```bash
+# Verify
 scoop --version
-poetry --version
 ```
 
 ---
 
-### 3. Verify All Tools
+### Step 7: Verify All Tools
 
 Check that all required tools are accessible:
 
@@ -574,17 +703,121 @@ $
 
 ---
 
+## Bash Bootstrap Script (Alternative to PowerShell)
+
+Once you have Git Bash, Python, and Poetry installed (Steps 1-3), you can use this bash script instead of the PowerShell bootstrap:
+
+**Create `bootstrap-bash.sh`:**
+
+```bash
+#!/bin/bash
+# Bootstrap data science environment in bash
+
+set -e  # Exit on error
+
+echo "=== Data Science Environment Bootstrap (Bash) ==="
+
+# Install Scoop
+echo "Installing Scoop..."
+powershell -NoProfile -Command "iwr -useb get.scoop.sh | iex"
+
+# Add to PATH for this session
+export PATH="$HOME/scoop/shims:$PATH"
+export PATH="$HOME/AppData/Roaming/Python/Scripts:$PATH"
+
+# Verify tools
+echo "Verifying tools..."
+git --version
+python --version
+poetry --version
+scoop --version
+
+# Create project directory
+PROJ_DIR="$HOME/code/data-science"
+echo "Creating project: $PROJ_DIR"
+mkdir -p "$PROJ_DIR"
+cd "$PROJ_DIR"
+
+# Initialize git
+git init
+git config user.name "Brian Brewer"
+git config user.email "brian.brewer@example.com"
+
+# Initialize Poetry project
+echo "Initializing Poetry project..."
+poetry init -n --name "data-science" --description "Data science environment"
+
+# Configure Poetry
+poetry config virtualenvs.in-project true
+
+# Add dependencies
+echo "Adding dependencies..."
+poetry add numpy pandas matplotlib seaborn scikit-learn
+poetry add jupyter jupyterlab ipykernel
+
+# Install
+echo "Installing dependencies..."
+poetry install
+
+# Register Jupyter kernel
+echo "Registering Jupyter kernel..."
+poetry run python -m ipykernel install --user --name data-science --display-name "Python (data-science)"
+
+# Add to bashrc permanently
+echo 'export PATH="$HOME/scoop/shims:$PATH"' >> ~/.bashrc
+echo 'export PATH="$HOME/AppData/Roaming/Python/Scripts:$PATH"' >> ~/.bashrc
+
+echo ""
+echo "=== Setup Complete! ==="
+echo "Project: $PROJ_DIR"
+echo "Launch Jupyter: poetry run jupyter lab"
+echo ""
+echo "Restart your terminal or run: source ~/.bashrc"
+```
+
+**Run the script:**
+
+```bash
+bash bootstrap-bash.sh
+```
+
+**What it does:**
+1. Installs Scoop (via PowerShell command)
+2. Verifies all tools installed
+3. Creates project directory
+4. Initializes git repo
+5. Creates Poetry project with pyproject.toml
+6. Adds data science dependencies
+7. Installs packages and creates venv
+8. Registers Jupyter kernel
+9. Updates ~/.bashrc with PATH
+
+This is the **bash equivalent** of `data-science-bootstrap.ps1` PowerShell script.
+
+---
+
 ## Complete Setup Checklist
 
-- [ ] Git Bash installed & accessible
-- [ ] Python 3.14+ installed & in PATH
+**Initial Setup (from fresh Windows):**
+- [ ] Git for Windows installed (includes Git Bash)
+- [ ] Git Bash opens and works (`git --version`)
+- [ ] Python 3.14+ installed & in PATH (`python --version`)
+- [ ] Poetry installed (`poetry --version`)
+- [ ] VS Code installed
+- [ ] VS Code terminal set to Git Bash
+
+**Environment Configuration:**
 - [ ] Scoop installed (`~/scoop/`)
-- [ ] Poetry installed (`~/AppData/Roaming/Python/Scripts/`)
 - [ ] `.bashrc` updated with Scoop & Poetry paths
 - [ ] `source ~/.bashrc` executed
 - [ ] All tools verified: `git`, `python`, `poetry`, `scoop`
-- [ ] VS Code terminal set to Git Bash
-- [ ] `poetry install` run in project directory
+
+**Project Setup:**
+- [ ] Project directory created
+- [ ] Git initialized (`git init`)
+- [ ] Poetry project initialized (`poetry init`)
+- [ ] Dependencies added (`poetry add ...`)
+- [ ] `poetry install` run successfully
 - [ ] Jupyter kernel registered
 - [ ] `poetry run jupyter lab` launches successfully
 
